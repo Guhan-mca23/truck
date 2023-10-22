@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract DrugTraceability {
+    struct Drug {
+        string name;
+        uint256 batchNumber;
+        address manufacturer;
+        address currentOwner;
+        uint256 manufacturingDate;
+    }
+
+    mapping(uint256 => Drug) public drugs;
+    uint256 public drugCount;
+
+    event DrugManufactured(uint256 batchNumber, string name, address manufacturer, uint256 manufacturingDate);
+    event DrugTransferred(uint256 batchNumber, address from, address to, uint256 transferDate);
+
+    constructor() {
+        drugCount = 0;
+    }
+
+    function manufactureDrug(string memory _name) public {
+        uint256 batchNumber = drugCount + 1;
+        drugs[batchNumber] = Drug(_name, batchNumber, msg.sender, msg.sender, block.timestamp);
+        drugCount++;
+
+        emit DrugManufactured(batchNumber, _name, msg.sender, block.timestamp);
+    }
+
+    function transferDrug(uint256 _batchNumber, address _newOwner) public {
+        Drug storage drug = drugs[_batchNumber];
+        require(drug.currentOwner == msg.sender, "You are not the current owner of this drug");
+
+        drug.currentOwner = _newOwner;
+        emit DrugTransferred(_batchNumber, msg.sender, _newOwner, block.timestamp);
+    }
+}
+
